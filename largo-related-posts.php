@@ -15,7 +15,7 @@
  * @wordpress-plugin
  * Plugin Name:       Largo Related Posts Widget
  * Plugin URI:        https://inn.org
- * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
+ * Description:       Display related posts in a widget using taxonomy relationships.
  * Version:           1.0.0
  * Author:            INN Nerds
  * Author URI:        https://nerds.inn.org
