@@ -107,7 +107,7 @@ class Largo_Related_Posts_Admin {
 	 */
 	public function largo_add_related_posts_meta_box() {
 		add_meta_box(
-			'largo_additional_options2',
+			'largo_additional_options',
 			__( 'Additional Options TEST', 'largo' ),
 			array( $this, 'largo_related_posts_meta_box_display' ), //could also be added with largo_add_meta_content('largo_custom_related_meta_box_display', 'largo_additional_options')
 			'post',
@@ -133,6 +133,8 @@ class Largo_Related_Posts_Admin {
 		echo '<p><strong>' . __('Related Posts', 'largo') . '</strong><br />';
 		echo __('To override the default related posts functionality enter specific related post IDs separated by commas.') . '</p>';
 		echo '<input type="text" name="largo_custom_related_posts" value="' . esc_attr( $value ) . '" />';
+
+		do_action( 'largo_related_posts_metabox' );
 	}
 
 
