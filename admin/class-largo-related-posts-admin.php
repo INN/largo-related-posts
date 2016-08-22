@@ -100,4 +100,77 @@ class Largo_Related_Posts_Admin {
 
 	}
 
+	/**
+	 * Register the related posts metabox 
+	 *
+	 * @since    1.0.0
+	 */
+	public function largo_add_related_posts_meta_box() {
+		add_meta_box(
+			'largo_additional_options2',
+			__( 'Additional Options TEST', 'largo' ),
+			array( $this, 'largo_related_posts_meta_box_display' ), //could also be added with largo_add_meta_content('largo_custom_related_meta_box_display', 'largo_additional_options')
+			'post',
+			'side',
+			'core'
+		);
+	}
+
+	/**
+	 * Related posts metabox callback 
+	 *
+	 * Allows the user to set custom related posts for a post.
+	 *
+	 * @global $post
+	 */
+	public function largo_related_posts_meta_box_display( $post ) {
+
+		// make sure the form request comes from WordPress
+		wp_nonce_field( basename( __FILE__ ), 'largo_related_posts_nonce' );
+
+		$value = get_post_meta( $post->ID, 'largo_custom_related_posts', true );
+
+		echo '<p><strong>' . __('Related Posts', 'largo') . '</strong><br />';
+		echo __('To override the default related posts functionality enter specific related post IDs separated by commas.') . '</p>';
+		echo '<input type="text" name="largo_custom_related_posts" value="' . esc_attr( $value ) . '" />';
+	}
+
+
+	public function largo_related_posts_meta_box_save( $post_id ) {
+
+		// Verify form submission is coming from WordPress using a nonce
+		if ( !isset( $_POST['largo_related_posts_nonce'] ) || !wp_verify_nonce( $_POST['largo_related_posts_nonce'], basename( __FILE__ ) ) ){
+			return;
+		}
+
+		// return if autosave 
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+
+		// Check the user's permissions
+		if ( ! current_user_can( 'edit_post', $post_id ) ){
+			return;
+		}
+
+		if ( function_exists( 'largo_top_tag_display' ) ) {
+			echo 'test';
+			exit;
+		}
+
+		$key = 'largo_custom_related_posts';
+		$value = $_POST[$key];
+		if ( isset( $_POST['largo_custom_related_posts'] ) ) {
+			if ( get_post_meta( $post_id, $key, FALSE ) ) {
+				update_post_meta( $post_id, $key, $value ); //if the custom field already has a value, update it
+			} else {
+				add_post_meta( $post_id, $key, $value );//if the custom field doesn't have a value, add the data
+			}
+			if ( ! $value ) {
+				delete_post_meta( $post_id, $key ); //and delete if blank
+			}
+		}
+
+
+	}
 }

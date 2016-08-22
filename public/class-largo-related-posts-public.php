@@ -100,4 +100,23 @@ class Largo_Related_Posts_Public {
 
 	}
 
+	/**
+	 * Register the related posts widget 
+	 *
+	 * @since    1.0.0
+	 */
+	public function related_posts_widget() {
+		if ( ! class_exists( 'largo_related_posts_widget' ) ) {
+			require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-largo-related-posts-widget.php';
+		}	
+
+		if ( ! class_exists( 'Largo_Related' ) ) {
+			require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-largo-related-posts-logic.php';
+		}	
+
+		register_widget( 'largo_related_posts_widget' );
+
+	}
+
+
 }

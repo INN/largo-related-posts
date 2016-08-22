@@ -9,7 +9,7 @@ class largo_related_posts_widget extends WP_Widget {
 			'classname' 	=> 'largo-related-posts',
 			'description' 	=> __('Lists posts related to the current post', 'largo')
 		);
-		parent::__construct( 'largo-related-posts-widget', __('Largo Related Posts', 'largo'), $widget_ops);
+		parent::__construct( 'largo-related-posts-widget', __('Test Largo Related Posts', 'largo'), $widget_ops);
 	}
 
 	function widget( $args, $instance ) {
@@ -37,7 +37,7 @@ class largo_related_posts_widget extends WP_Widget {
  			'ignore_sticky_posts' => 1
  		) );
 
- 		if ( $rel_posts->have_posts() ) {
+		if ( $rel_posts->have_posts() ) {
 
 	 		echo '<ul class="related">';
 
