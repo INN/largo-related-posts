@@ -154,6 +154,10 @@ class Largo_Related_Posts {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
+		$this->loader->add_action('admin_footer', $plugin_admin, 'related_posts_ajax_js');
+		$this->loader->add_action('wp_ajax_related_posts_ajax_search', $plugin_admin, 'related_posts_ajax_search');
+		$this->loader->add_action('wp_ajax_nopriv_related_posts_ajax_search', $plugin_admin, 'related_posts_ajax_search');
+
 		$this->loader->add_action( 'add_meta_boxes', $plugin_admin, 'largo_add_related_posts_meta_box' );
 		$this->loader->add_action( 'save_post', $plugin_admin, 'largo_related_posts_meta_box_save' );
 

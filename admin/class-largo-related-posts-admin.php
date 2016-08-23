@@ -97,7 +97,55 @@ class Largo_Related_Posts_Admin {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/largo-related-posts-admin.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_script('jquery-ui-autocomplete', '', array('jquery-ui-widget', 'jquery-ui-position'), '1.8.6');
 
+	}
+
+	/**
+	 * Add javascript to trigger ajax search for manual related posts 
+	 *
+	 * @since    1.0.0
+	 */
+	public function related_posts_ajax_js() {
+		?>
+		<script type="text/javascript">
+			var se_ajax_url = '<?php echo admin_url('admin-ajax.php'); ?>';
+
+			jQuery(document).ready(function($) {
+				
+				$('input#se_search_element_id').autocomplete({
+					source: se_ajax_url + '?action=related_posts_ajax_search',
+				});
+
+			});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Perform ajax search using suggest.js 
+	 *
+	 * @since    1.0.0
+	 */
+	public function related_posts_ajax_search() {
+		global $wpdb;
+		$search = like_escape($_REQUEST['term']);
+
+		$query = 'SELECT post_title, ID FROM wp_posts
+		WHERE post_title LIKE \'%' . $search . '%\'';
+
+		$suggestions = array();
+
+		foreach ($wpdb->get_results($query) as $row) {
+			$suggestion['value'] = $row->ID;
+			$suggestion['label'] = $row->post_title;
+			
+			$suggestions[] = $suggestion;
+		}
+
+		$response = json_encode( $suggestions );
+		echo $response;
+		die();
 	}
 
 	/**
@@ -107,9 +155,9 @@ class Largo_Related_Posts_Admin {
 	 */
 	public function largo_add_related_posts_meta_box() {
 		add_meta_box(
-			'largo_additional_options',
-			__( 'Additional Options TEST', 'largo' ),
-			array( $this, 'largo_related_posts_meta_box_display' ), //could also be added with largo_add_meta_content('largo_custom_related_meta_box_display', 'largo_additional_options')
+			'largo_related_posts',
+			__( 'Related Posts', 'largo' ),
+			array( $this, 'largo_related_posts_meta_box_display' ), 
 			'post',
 			'side',
 			'core'
@@ -131,8 +179,11 @@ class Largo_Related_Posts_Admin {
 		$value = get_post_meta( $post->ID, 'largo_custom_related_posts', true );
 
 		echo '<p><strong>' . __('Related Posts', 'largo') . '</strong><br />';
-		echo __('To override the default related posts functionality enter specific related post IDs separated by commas.') . '</p>';
+		echo __('To override the default related posts functionality,  enter post titles to manually select below.') . '</p>';
 		echo '<input type="text" name="largo_custom_related_posts" value="' . esc_attr( $value ) . '" />';
+		echo '<input type="text" id="se_search_element_id" name="se_search_element_id" value="" />';
+
+		echo '<div id="stop-log">stoplog</div>';
 
 		do_action( 'largo_related_posts_metabox' );
 	}
@@ -153,11 +204,6 @@ class Largo_Related_Posts_Admin {
 		// Check the user's permissions
 		if ( ! current_user_can( 'edit_post', $post_id ) ){
 			return;
-		}
-
-		if ( function_exists( 'largo_top_tag_display' ) ) {
-			echo 'test';
-			exit;
 		}
 
 		$key = 'largo_custom_related_posts';
