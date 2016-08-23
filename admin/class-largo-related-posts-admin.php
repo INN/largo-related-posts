@@ -115,7 +115,12 @@ class Largo_Related_Posts_Admin {
 				
 				$('input#se_search_element_id').autocomplete({
 					source: se_ajax_url + '?action=related_posts_ajax_search',
-				});
+					select: function (event, ui) {
+						$("input#se_search_element_id").val('');
+						$("#related-posts-saved ul").append("<li>" + ui.item.label + "</li>");
+						return false;
+					}
+			});
 
 			});
 		</script>
@@ -183,7 +188,7 @@ class Largo_Related_Posts_Admin {
 		echo '<input type="text" name="largo_custom_related_posts" value="' . esc_attr( $value ) . '" />';
 		echo '<input type="text" id="se_search_element_id" name="se_search_element_id" value="" />';
 
-		echo '<div id="stop-log">stoplog</div>';
+		echo '<div id="related-posts-saved">stoplog<ul></ul></div>';
 
 		do_action( 'largo_related_posts_metabox' );
 	}
