@@ -117,18 +117,35 @@ class Largo_Related_Posts_Admin {
 					source: se_ajax_url + '?action=related_posts_ajax_search',
 					select: function (event, ui) {
 						$("input#se_search_element_id").val('');
-						$("#related-posts-saved ul").append("<li>" + ui.item.label + "</li>");
+						$("#related-posts-saved ul").append("<li data-id='" + ui.item.value + "'>" + ui.item.label + "</li>");
+
+						var optionTexts = [];
+						$("#related-posts-saved ul li").each(function() { optionTexts.push( [ $(this).attr('data-id'), $(this).text() ] ) });
+
+						jQuery.post(
+							ajaxurl, 
+							{
+								'action': 'related_posts_ajax_save',
+								'data':  optionTexts, 
+								'post_id':      $('#post_ID').val()
+							} 
+						);
 						return false;
 					}
-			});
+				});
 
+
+
+				$('#related-posts-saved').change(function(e) {
+					console.log(e);	
+				});
 			});
 		</script>
 		<?php
 	}
 
 	/**
-	 * Perform ajax search using suggest.js 
+	 * Perform ajax search using jQuery Autocomplete 
 	 *
 	 * @since    1.0.0
 	 */
@@ -150,6 +167,21 @@ class Largo_Related_Posts_Admin {
 
 		$response = json_encode( $suggestions );
 		echo $response;
+		die();
+	}
+
+	/**
+	 * Perform ajax save 
+	 *
+	 * @since    1.0.0
+	 */
+	public function related_posts_ajax_save() {
+		$data = array();
+		foreach ( $_POST['data'] as $item ) {
+			$data[$item[0]] = $item[1];
+		}
+
+		update_post_meta( $_POST['post_id'], 'manual_related_posts', maybe_serialize( $data ) );
 		die();
 	}
 
@@ -188,7 +220,15 @@ class Largo_Related_Posts_Admin {
 		echo '<input type="text" name="largo_custom_related_posts" value="' . esc_attr( $value ) . '" />';
 		echo '<input type="text" id="se_search_element_id" name="se_search_element_id" value="" />';
 
-		echo '<div id="related-posts-saved">stoplog<ul></ul></div>';
+		echo '<div id="related-posts-saved">';
+			echo '<ul>';
+				$manual_related_posts = get_post_meta( $post->ID, 'manual_related_posts', true );
+
+				foreach ( maybe_unserialize( $manual_related_posts ) as $key => $title ) {
+					echo '<li data-id="' . $key . '">' . $title . '</li>';
+				}	
+			echo '</ul>';
+		echo '</div>';
 
 		do_action( 'largo_related_posts_metabox' );
 	}
