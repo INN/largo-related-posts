@@ -67,7 +67,6 @@ class Largo_Byline {
 		// Author-specific portion of byline
 		$this->avatar();
 		$this->author_link();
-		$this->job_title();
 		$this->twitter();
 
 		// The generic parts
@@ -95,7 +94,7 @@ class Largo_Byline {
 
 		// only do avatars if it's a single post
 		if ( is_single() ) {
-			if ( largo_has_avatar( $author_email ) ) {
+			if ( $this->largo_has_avatar( $author_email ) ) {
 				$output .= get_avatar(
 					$author_email,
 					32,
@@ -116,21 +115,8 @@ class Largo_Byline {
 	 * a wrapper around largo_author_link
 	 */
 	function author_link() {
-		$authors = largo_author_link( false, $this->post_id );
+		$authors = $this->largo_author_link( false, $this->post_id );
 		$output = '<span class="by-author"><span class="by">' . __( 'By', 'largo' ) . '</span> <span class="author vcard" itemprop="author">' . $authors . '</span></span>';
-		echo $output;
-	}
-
-	/**
-	 * If job titles are enabled by Largo's theme option, display the one for this author
-	 */
-	function job_title() {
-		$show_job_titles = of_get_option( 'show_job_titles', false );
-		// only do this if we're showing job titles and there is one to be shown
-		if ( $show_job_titles && $job = get_the_author_meta( 'job_title' , $this->author_id ) ) {
-			$output .= '<span class="job-title"><span class="comma">,</span> ' . $job . '</span>';
-		}
-		$output .= '';
 		echo $output;
 	}
 
@@ -146,11 +132,29 @@ class Largo_Byline {
 	}
 
 	/**
+	 * Has a post been saved after it was created? (Has it been updated?)
+	 *
+	 * Can be used inside or outside the Loop.
+	 *
+	 * @link https://github.com/INN/Largo/issues/1259
+	 * @since 0.5.5
+	 * @param WP_Post|int|null $post The post
+	 * @return bool Whether or not the post has been updated
+	 */
+	function largo_post_was_updated( $post = null ) {
+		$post = get_post( $post );
+
+		$published = get_the_time( 'U', $post );
+		$modified = get_the_modified_time( 'U', $post );
+		return ( $published < $modified );
+	}
+	
+	/**
 	 * Determine which date to display
 	 */
 	function maybe_updated_date() {
 		if ( ! $this->exclude_date ) {
-			if ( is_single() && largo_post_was_updated( $this->post ) ) {
+			if ( is_single() && $this->largo_post_was_updated( $this->post ) ) {
 				$this->edited_date();
 			} else {
 				$this->published_date();
@@ -166,8 +170,48 @@ class Largo_Byline {
 			' <time class="entry-date updated dtstamp pubdate" datetime="%1$s"><span class="published">%2$s </span>%3$s</time>',
 			esc_attr( get_the_date( 'c', $this->post_id ) ),
 			__( 'Published', 'largo' ),
-			largo_time( false, $this->post_id )
+			$this->largo_time( false, $this->post_id )
 		);
+	}
+
+	/**
+	 * For posts published less than 24 hours ago, show "time ago" instead of date, otherwise just use the published date
+	 *
+	 * @param $echo bool echo the string or return itv (default: echo)
+	 * @return string date and time as formatted html
+	 * @since 0.3
+	 */
+	function largo_time( $echo=true, $post=null ) {
+		$post = get_post( $post );
+
+		$pubdate = get_the_time( 'U', $post );
+		$output = $this->largo_time_diff( $pubdate );
+
+		if ( $echo )
+			echo $output;
+		return $output;
+	}
+
+	/**
+	 * Given a time, if it was less than 24 hours ago return how many hours ago that was, otherwise return the 'F j, Y' formatted date
+	 * @param int $modified the Unix timestamp for the modified date
+	 * @return string HTML for the either "x hours ago" or the submitted date, formatted
+	 * @since 0.5.5
+	 * @see https://secure.php.net/manual/en/function.date.php
+	 * @see https://github.com/INN/Largo/pull/1265
+	 */
+	function largo_time_diff( $time ) {
+		$time_difference = current_time( 'timestamp' ) - $time;
+
+		if ( $time_difference < 86400 ) {
+			$output = sprintf( __( '<span class="time-ago">%s ago</span>', 'largo' ),
+				human_time_diff( $time, current_time( 'timestamp' ) )
+			);
+		} else {
+			$output = date( 'F j, Y', $time );
+		}
+
+		return $output;
 	}
 
 	/**
@@ -195,6 +239,86 @@ class Largo_Byline {
 			echo ' <span class="edit-link"><a href="' . get_edit_post_link( $this->post_id ) . '">' . __( 'Edit This Post', 'largo' ) . '</a></span>';
 		}
 	}
+
+	/**
+	 * Determine whether or not an author has a valid gravatar image
+	 * see: http://codex.wordpress.org/Using_Gravatars
+	 *
+	 * @param $email string an author's email address
+	 * @return bool true if a gravatar is available for this user
+	 * @since 0.3
+	 */
+	function largo_has_gravatar( $email ) {
+		// Craft a potential url and test its headers
+		$hash = md5( strtolower( trim( $email ) ) );
+
+		$cache_key = 'largo_has_gravatar_' . $hash;
+		if ( false !== ( $cache_value = get_transient( $cache_key ) ) ) {
+			return (bool) $cache_value;
+		}
+
+		$uri = 'http://www.gravatar.com/avatar/' . $hash . '?d=404';
+		$response = wp_remote_head( $uri );
+		if ( 200 == wp_remote_retrieve_response_code( $response ) ) {
+			$cache_value = '1';
+		} else {
+			$cache_value = '0';
+		}
+		set_transient( $cache_key, $cache_value );
+		return (bool) $cache_value;
+	}
+
+	/**
+	 * Determine whether or not a user has an avatar. Fallback checks if user has a gravatar.
+	 *
+	 * @param $email string an author's email address
+	 * @return bool true if an avatar is available for this user
+	 * @since 0.4
+	 */
+	function largo_has_avatar($email) {
+		$user = get_user_by('email', $email);
+		$result = $this->largo_get_user_avatar_id($user->ID);
+		if (!empty($result))
+			return true;
+		else {
+			if ($this->largo_has_gravatar($email))
+				return true;
+		}
+		return false;
+	}
+
+	function largo_get_user_avatar_id( $user_id ) {
+		return get_user_meta( $user_id, 'largo_avatar', true );
+	}
+
+	/**
+	 * Get the author link when custom byline options are set
+	 *
+	 * @param $echo bool echo the string or return it (default: echo)
+	 * @return string author link as formatted html
+	 * @since 0.3
+	 */
+	function largo_author_link( $echo = true, $post=null ) {
+		$post = get_post( $post );
+		$values = get_post_custom( $post->ID );
+		$author_id = ( $post ) ? $post->post_author : get_the_author_meta( 'ID' );
+
+		$byline_text = isset( $values['largo_byline_text'] ) ? $values['largo_byline_text'][0] : get_the_author_meta('display_name', $author_id);
+
+		// if it's a custom byline but there's no link, just output the byline text
+		if ( isset( $values['largo_byline_text'] ) && !isset( $values['largo_byline_link'] ) ) {
+			$output = esc_html( $byline_text );
+		} else {
+			$byline_link = isset( $values['largo_byline_link'] ) ? $values['largo_byline_link'][0] : get_author_posts_url( get_the_author_meta( 'ID', $author_id ) );
+			$byline_title_attr = sprintf( __( 'More from %s','largo' ), $byline_text );
+			$output = '<a class="url fn n" href="' . esc_url( $byline_link ) . '" title="' . esc_attr( $byline_title_attr ) . '" rel="author">' . esc_html( $byline_text ) . '</a>';
+		}
+
+		if ( $echo )
+			echo $output;
+		return $output;
+	}
+
 }
 
 // For Largo Custom Bylines
@@ -230,7 +354,7 @@ class Largo_CoAuthors_Byline extends Largo_Byline {
 	/**
 	 * Differs from Largo_Byline in following ways:
 	 *
-	 * - gets list of coauthors, runs avatar, author_link, job_title, organization, twitter for each of those
+	 * - gets list of coauthors, runs avatar, author_link, organization, twitter for each of those
 	 * - joins list of coauthors with commas and 'and' as appropriate
 	 *
 	 */
@@ -247,7 +371,6 @@ class Largo_CoAuthors_Byline extends Largo_Byline {
 
 			$this->avatar();
 			$this->author_link();
-			$this->job_title();
 			$this->organization();
 			$this->twitter();
 
@@ -289,19 +412,6 @@ class Largo_CoAuthors_Byline extends Largo_Byline {
 	}
 
 	/**
-	 * Job title from the coauthors object
-	 */
-	function job_title() {
-		$show_job_titles = of_get_option( 'show_job_titles', false );
-		// only do this if we're showing job titles and there is one to be shown
-		if ( true && $job = $this->author->job_title ) {
-			$output .= '<span class="job-title"><span class="comma">,</span> ' . $job . '</span>';
-		}
-		$output .= '';
-		echo $output;
-	}
-
-	/**
 	 * Output coauthor users's organization
 	 */
 	function organization() {
@@ -320,4 +430,5 @@ class Largo_CoAuthors_Byline extends Largo_Byline {
 		}
 		echo $output;
 	}
+
 }
