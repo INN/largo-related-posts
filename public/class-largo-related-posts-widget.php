@@ -51,7 +51,7 @@ class largo_related_posts_widget extends WP_Widget {
 					<span class="by-author"><?php $this->largo_byline( true, false ); ?></span>
 				</h5>
 				<?php // post excerpt/summary
-				largo_excerpt(get_the_ID(), 2, null, null, true);
+				$this->largo_excerpt(get_the_ID(), 2, null, null, true);
 		 		echo '</li>';
 	 		}
 
@@ -61,6 +61,114 @@ class largo_related_posts_widget extends WP_Widget {
 		// Restore global $post
 		wp_reset_postdata();
 		$post = $preserve;
+	}
+
+	/**
+	 * Make a nicer-looking excerpt regardless of how an author has been using excerpts in the past
+	 *
+	 * @param $post object the post
+	 * @param $sentence_count int the number of sentences to show
+	 * @param $use_more bool append read more link to end of output
+	 * @param $more_link string the text of the read more link
+	 * @param $echo bool echo the output or return it (default: echo)
+	 * @param $strip_tags|$strip_shortcodes bool
+	 * @uses largo_trim_sentences
+	 * @package largo
+	 * @since 0.3
+	 */
+	function largo_excerpt( $the_post=null, $sentence_count = 5, $use_more = null, $more_link = null, $echo = true, $strip_tags = true, $strip_shortcodes = true ) {
+		if (!empty($use_more))
+			_deprecated_argument(__FUNCTION__, '0.5.1', 'Parameter $use_more is deprecated. Please use null as the argument.');
+		if (!empty($more_link))
+			_deprecated_argument(__FUNCTION__, '0.5.1', 'Parameter $more_link is deprecated. Please use null as the argument.');
+
+		$the_post = get_post($the_post); // Normalize it into a post object
+
+		if (!empty($the_post->post_excerpt)) {
+			// if a post has a custom excerpt set, we'll use that
+			$content = apply_filters('get_the_excerpt', $the_post->post_excerpt);
+		} else if (is_home() && preg_match('/<!--more(.*?)?-->/', $the_post->post_content, $matches) > 0) {
+			// if we're on the homepage and the post has a more tag, use that
+			$parts = explode($matches[0], $the_post->post_content, 2);
+			$content = $parts[0];
+		} else {
+			// otherwise we'll just do our best and make the prettiest excerpt we can muster
+			$content = $this->largo_trim_sentences($the_post->post_content, $sentence_count);
+		}
+
+		// optionally strip shortcodes and html
+		$output = '';
+		if ( $strip_tags && $strip_shortcodes )
+			$output .= strip_tags( strip_shortcodes ( $content ) );
+		else if ( $strip_tags )
+			$output .= strip_tags( $content );
+		else if ( $strip_shortcodes )
+			$output .= strip_shortcodes( $content );
+		else
+			$output .= $content;
+
+		$output = apply_filters('the_content', $output);
+
+		if ( $echo )
+			echo $output;
+
+		return $output;
+	}
+
+	/**
+	 * Attempt to trim input at sentence breaks
+	 *
+	 * @param $input string
+	 * @param $sentences number of sentences to trim to
+	 * @param $echo echo the string or return it (default: return)
+	 * @return $output trimmed string
+	 *
+	 * @since 0.3
+	 */
+	function largo_trim_sentences( $input, $sentences, $echo = false ) {
+		$re = '/# Split sentences on whitespace between them.
+			(?<=                # Begin positive lookbehind.
+				[.!?]           	# Either an end of sentence punct,
+				| [.!?][\'"]    	# or end of sentence punct and quote.
+			)                   # End positive lookbehind.
+			(?<!                # Begin negative lookbehind.
+				Mr\.            	# Skip either "Mr."
+			    | Mrs\.             # or "Mrs.",
+			    | Ms\.              # or "Ms.",
+			    | Jr\.              # or "Jr.",
+			    | Dr\.              # or "Dr.",
+			    | Prof\.            # or "Prof.",
+			    | Sr\.              # or "Sr.",
+			    | Rep\.             # or "Rep.",
+			    | Sen\.             # or "Sen.",
+			    | Gov\.             # or "Gov.",
+			    | Pres\.            # or "Pres.",
+			    | U\.S\.            # or "U.S.",
+			    | Rev\.            	# or "Rev.",
+			    | Gen\.        		# or "Gen.",
+			    | Capt\.            # or "Capt.",
+			    | Lt\.            	# or "Lt.",
+			    | Cpl\.            	# or "Cpl.",
+			    | Inc\.            	# or "Inc.",
+			    | \s[A-Z]\.         # or initials ex: "George W. Bush",
+			    | [A-Z]\.[A-Z]\.    # or random state abbreviations ex: "O.H.",
+			)                   # End negative lookbehind.
+			\s+                 # Split on whitespace between sentences.
+			/ix';
+
+		$strings = preg_split( $re, strip_tags( strip_shortcodes( $input ) ), -1, PREG_SPLIT_NO_EMPTY);
+
+		$output = '';
+
+		for ( $i = 0; $i < $sentences && $i < count($strings); $i++ ) {
+			if ( $strings[$i] != '' )
+				$output .= $strings[$i] . ' ';
+		}
+
+		if ( $echo )
+			echo $output;
+
+		return $output;
 	}
 
 	function update( $new_instance, $old_instance ) {
