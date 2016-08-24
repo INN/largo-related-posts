@@ -159,7 +159,6 @@ class Largo_Related_Posts {
 		$this->loader->add_action('wp_ajax_related_posts_ajax_save', $plugin_admin, 'related_posts_ajax_save');
 
 		$this->loader->add_action( 'add_meta_boxes', $plugin_admin, 'largo_add_related_posts_meta_box' );
-		$this->loader->add_action( 'save_post', $plugin_admin, 'largo_related_posts_meta_box_save' );
 
 	}
 
