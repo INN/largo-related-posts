@@ -114,6 +114,13 @@ class Largo_Related_Posts {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-largo-related-posts-admin.php';
 
 		/**
+		 * The class responsible for working with bylines.
+		 */
+		if ( !class_exists( 'Largo_Byline' ) ) {
+			require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/byline_class.php';
+		}
+
+		/**
 		 * The class responsible for defining all actions that occur in the public-facing
 		 * side of the site.
 		 */

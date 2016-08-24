@@ -48,7 +48,7 @@ class largo_related_posts_widget extends WP_Widget {
 				?>
 				<h4><a href="<?php the_permalink(); ?>" title="Read: <?php esc_attr( the_title('','', FALSE) ); ?>"><?php the_title(); ?></a></h4>
 				<h5 class="byline">
-					<span class="by-author"><?php largo_byline( true, false ); ?></span>
+					<span class="by-author"><?php $this->largo_byline( true, false ); ?></span>
 				</h5>
 				<?php // post excerpt/summary
 				largo_excerpt(get_the_ID(), 2, null, null, true);
@@ -108,6 +108,61 @@ class largo_related_posts_widget extends WP_Widget {
 		</p>
 
 	<?php
+	}
+
+	/**
+	 * Outputs custom byline and link (if set), otherwise outputs author link and post date
+	 *
+	 * @param Boolean $echo Echo the string or return it (default: echo)
+	 * @param Boolean $exclude_date Whether to exclude the date from byline (default: false)
+	 * @param WP_Post|Integer $post The post object or ID to get the byline for. Defaults to current post.
+	 * @return String Byline as formatted html
+	 * @since 0.3
+	 */
+	function largo_byline( $echo = true, $exclude_date = false, $post = null ) {
+
+		// Get the post ID
+		if (!empty($post)) {
+			if (is_object($post))
+				$post_id = $post->ID;
+			else if (is_numeric($post))
+				$post_id = $post;
+		} else {
+			$post_id = get_the_ID();
+		}
+
+		// Set us up the options
+		// This is an array of things to allow us to easily add options in the future
+		$options = array(
+			'post_id' => $post_id,
+			'values' => get_post_custom( $post_id ),
+			'exclude_date' => $exclude_date,
+		);
+
+		if ( isset( $options['values']['largo_byline_text'] ) && !empty( $options['values']['largo_byline_text'] ) ) {
+			// Temporary placeholder for largo custom byline option
+			$byline = new Largo_Custom_Byline( $options );
+		} else if ( function_exists( 'get_coauthors' ) ) {
+			// If Co-Authors Plus is enabled and there is not a custom byline
+			$byline = new Largo_CoAuthors_Byline( $options );
+		} else {
+			// no custom byline, no coauthors: let's do the default
+			$byline = new Largo_Byline( $options );
+		}
+
+		/**
+		 * Filter the largo_byline output text to allow adding items at the beginning or the end of the text.
+		 *
+		 * @since 0.5.4
+		 * @param string $partial The HTML of the output of largo_byline(), before the edit link is added.
+		 * @link https://github.com/INN/Largo/issues/1070
+		 */
+		$byline = apply_filters( 'largo_byline', $byline );
+
+		if ( $echo ) {
+			echo $byline;
+		}
+		return $byline;
 	}
 
 }
