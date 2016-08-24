@@ -241,9 +241,12 @@ class Largo_Related {
 	public function ids() {
 
 		//see if this post has manually set related posts
-		$post_ids = get_post_meta( $this->post_id, 'largo_custom_related_posts', true );
+		$post_ids = get_post_meta( $this->post_id, 'manual_related_posts', true );
 		if ( ! empty( $post_ids ) ) {
-			$this->post_ids = explode( ",", str_replace(' ', '', $post_ids) );
+			foreach ( $post_ids as $id => $post_title ) {
+				$ids[] = $id;
+			}
+			$this->post_ids = $ids;
 			if ( $this->have_enough_posts() ) {
 				return $this->cleanup_ids();
 			}
