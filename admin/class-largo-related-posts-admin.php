@@ -253,8 +253,10 @@ update_post_meta( $_POST['post_id'], 'test', $_POST );
 			echo '<ul>';
 				$manual_related_posts = get_post_meta( $post->ID, 'manual_related_posts', true );
 
-				foreach ( $manual_related_posts as $key => $title ) {
-					echo '<li data-id="' . $key . '" data-title="' . $title . '">' . $title . ' | <a class="remove-related">Remove</a></li>';
+				if ( $manual_related_posts ) {
+					foreach ( $manual_related_posts as $key => $title ) {
+						echo '<li data-id="' . $key . '" data-title="' . $title . '">' . $title . ' | <a class="remove-related">Remove</a></li>';
+					}
 				}	
 			echo '</ul>';
 		echo '</div>';
