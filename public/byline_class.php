@@ -94,6 +94,7 @@ class Largo_Byline {
 
 		// only do avatars if it's a single post
 		if ( is_single() ) {
+
 			if ( $this->largo_has_avatar( $author_email ) ) {
 				$output .= get_avatar(
 					$author_email,
@@ -224,10 +225,28 @@ class Largo_Byline {
 			' <time class="entry-date updated dtstamp" datetime="%1$s"><span class="last-modified">%2$s %3$s %4$s %5$s</span></time> ',
 			esc_attr( get_the_modified_date( 'c', $this->post_id ) ),
 			__( 'Updated', 'largo' ),
-			largo_modified_time( false, $this->post_id ),
+			$this->largo_modified_time( false, $this->post_id ),
 			__( 'at', 'largo' ),
 			get_the_modified_date( 'g:i a' )
 		);
+	}
+
+	/**
+	 * For posts modified less than 24 hours ago, show "time ago" instead of date, otherwise just use the modified date
+	 *
+	 * @param $echo bool echo the string or return itv (default: echo)
+	 * @return string date and time as formatted html
+	 * @since 0.5.5
+	 */
+	function largo_modified_time( $echo=true, $post=null ) {
+		$post = get_post( $post );
+
+		$updated = get_the_modified_time( 'U', $post );
+		$output = $this->largo_time_diff( $updated );
+
+		if ( $echo )
+			echo $output;
+		return $output;
 	}
 
 	/**
@@ -277,6 +296,7 @@ class Largo_Byline {
 	 */
 	function largo_has_avatar($email) {
 		$user = get_user_by('email', $email);
+
 		$result = $this->largo_get_user_avatar_id($user->ID);
 		if (!empty($result))
 			return true;
