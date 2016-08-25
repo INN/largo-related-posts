@@ -28,7 +28,6 @@ class largo_related_posts_widget extends WP_Widget {
 		if ( $title ) echo $before_title . $title . $after_title;
 
  		$related = new Largo_Related( $instance['qty'] );
-
  		//get the related posts
  		$rel_posts = new WP_Query( array(
  			'post__in' => $related->ids(),
@@ -36,10 +35,11 @@ class largo_related_posts_widget extends WP_Widget {
  			'posts_per_page' => $instance['qty'],
  			'ignore_sticky_posts' => 1 
  		) );
-
 		if ( $rel_posts->have_posts() ) {
+			
+			$display_class = 'simple' == $instance['display'] ? 'simple' : 'full';	
 
-	 		echo '<ul class="related">';
+			echo '<ul class="related ' . $display_class . '">';
 
 	 		while ( $rel_posts->have_posts() ) {
 		 		$rel_posts->the_post();
@@ -214,8 +214,8 @@ class largo_related_posts_widget extends WP_Widget {
 		<p>
 			<label for="<?php echo $this->get_field_id('display'); ?>"><?php _e('Display Type', 'largo'); ?>:</label>
 			<select name="<?php echo $this->get_field_name('display'); ?>" id="<?php echo $this->get_field_id('display'); ?>">
-				<option value="simple"<?php if ( $display == 'simple' ) echo ' selected="selected"'; ?>>Simple</option>
-				<option value="full"<?php if ( $display == 'full' ) echo ' selected="selected"'; ?>>Full</option>
+				<option value="simple"<?php if ( 'simple' == $display ) echo ' selected="selected"'; ?>>Simple</option>
+				<option value="full"<?php if ( 'full' == $display ) echo ' selected="selected"'; ?>>Full</option>
 			</select>
 		</p>
 

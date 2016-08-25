@@ -34,17 +34,24 @@
     li {
       list-style: none;
       display: block;
-      .clearfix();
     }
   }
-  h4 {
-    font-size: @baseFontSize * 1.5;
-    margin-bottom: @baseline / 2;
-    /* Responsive Typography Proportioning */
-    @media only screen and (max-width: 640px) {
-      font-size: @baseFontSize * 1.25;
-      line-height: 1.1;
-      margin-bottom: @baseline / 5;
+  ul.simple {
+    padding: 0;
+  }
+  ul.full { 
+    li {
+      .clearfix();
+    }
+    h4 {
+     font-size: @baseFontSize * 1.5;
+     margin-bottom: @baseline / 2;
+     /* Responsive Typography Proportioning */
+     @media only screen and (max-width: 640px) {
+       font-size: @baseFontSize * 1.25;
+       line-height: 1.1;
+       margin-bottom: @baseline / 5;
+     } 
     }
   }
   h5.byline {

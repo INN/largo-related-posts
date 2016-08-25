@@ -240,7 +240,7 @@ class Largo_Related {
 	 */
 	public function ids() {
 
-		//see if this post has manually set related posts
+		// see if this post has manually set related posts
 		$post_ids = get_post_meta( $this->post_id, 'manual_related_posts', true );
 		if ( ! empty( $post_ids ) ) {
 			foreach ( $post_ids as $id => $post_title ) {
