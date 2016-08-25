@@ -44,14 +44,21 @@ class largo_related_posts_widget extends WP_Widget {
 	 		while ( $rel_posts->have_posts() ) {
 		 		$rel_posts->the_post();
 		 		echo '<li>';
-				echo '<a href="' . get_permalink() . '"/>' . get_the_post_thumbnail( get_the_ID(), 'thumbnail', array('class'=>'alignleft') ) . '</a>';
-				?>
-				<h4><a href="<?php the_permalink(); ?>" title="Read: <?php esc_attr( the_title('','', FALSE) ); ?>"><?php the_title(); ?></a></h4>
-				<h5 class="byline">
-					<span class="by-author"><?php $this->largo_byline( true, false ); ?></span>
-				</h5>
-				<?php // post excerpt/summary
-				$this->largo_excerpt(get_the_ID(), 2, null, null, true);
+					if ( 'simple' == $instance['display'] ) {
+						?>
+						<h4><a href="<?php the_permalink(); ?>" title="Read: <?php esc_attr( the_title('','', FALSE) ); ?>"><?php the_title(); ?></a></h4>
+						<?php
+					}
+					else {
+						echo '<a href="' . get_permalink() . '"/>' . get_the_post_thumbnail( get_the_ID(), 'thumbnail', array('class'=>'alignleft') ) . '</a>';
+						?>
+						<h4><a href="<?php the_permalink(); ?>" title="Read: <?php esc_attr( the_title('','', FALSE) ); ?>"><?php the_title(); ?></a></h4>
+						<h5 class="byline">
+							<span class="by-author"><?php $this->largo_byline( true, false ); ?></span>
+						</h5>
+						<?php // post excerpt/summary
+						$this->largo_excerpt(get_the_ID(), 2, null, null, true);
+					}
 		 		echo '</li>';
 	 		}
 
@@ -173,8 +180,9 @@ class largo_related_posts_widget extends WP_Widget {
 
 	function update( $new_instance, $old_instance ) {
 		$instance = $old_instance;
-		$instance['title'] = sanitize_text_field($new_instance['title']);
+		$instance['title'] = sanitize_text_field( $new_instance['title'] );
 		$instance['qty'] = (int) $new_instance['qty'];
+		$instance['display'] = sanitize_text_field( $new_instance['display'] );
 		$instance['show_byline'] = (int) $new_instance['show_byline'];
 		$instance['thumbnail_location'] = sanitize_key( $new_instance['thumbnail_location'] );
 		return $instance;
@@ -182,12 +190,15 @@ class largo_related_posts_widget extends WP_Widget {
 
 	function form( $instance ) {
 		//Defaults
-		$instance = wp_parse_args( (array) $instance, array( 'title' => 'Read Next', 'qty' => 1, 'show_byline' => 0, 'thumbnail_location' => 'before') );
+		$instance = wp_parse_args( (array) $instance, array( 'title' => 'Read Next', 'qty' => 1, 'display' => 'simple', 'show_byline' => 0, 'thumbnail_location' => 'before') );
 		$title = esc_attr( $instance['title'] );
 		$qty = $instance['qty'];
+		$display = $instance['display'];
 		?>
-		<p><label for="<?php echo $this->get_field_id('title'); ?>"><?php _e( 'Title', 'largo' ); ?>:</label>
-		<input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title; ?>" /></p>
+		<p>
+			<label for="<?php echo $this->get_field_id('title'); ?>"><?php _e( 'Title', 'largo' ); ?>:</label>
+			<input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title; ?>" />
+		</p>
 
 		<p>
 			<label for="<?php echo $this->get_field_id('qty'); ?>"><?php _e('Number of Posts to Display', 'largo'); ?>:</label>
@@ -198,6 +209,14 @@ class largo_related_posts_widget extends WP_Widget {
 			} ?>
 			</select>
 			<div class="description"><?php _e( "It's best to keep this at just one.", 'largo' ); ?></div>
+		</p>
+
+		<p>
+			<label for="<?php echo $this->get_field_id('display'); ?>"><?php _e('Display Type', 'largo'); ?>:</label>
+			<select name="<?php echo $this->get_field_name('display'); ?>" id="<?php echo $this->get_field_id('display'); ?>">
+				<option value="simple"<?php if ( $display == 'simple' ) echo ' selected="selected"'; ?>>Simple</option>
+				<option value="full"<?php if ( $display == 'full' ) echo ' selected="selected"'; ?>>Full</option>
+			</select>
 		</p>
 
 		<p><input id="<?php echo $this->get_field_id('show_byline'); ?>" name="<?php echo $this->get_field_name('show_byline'); ?>" type="checkbox" value="1" <?php checked( $instance['show_byline'], 1);?> />
