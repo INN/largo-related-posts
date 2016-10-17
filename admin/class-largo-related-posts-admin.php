@@ -170,7 +170,7 @@ class Largo_Related_Posts_Admin {
 		$search = like_escape($_REQUEST['term']);
 
 		$query = 'SELECT post_title, ID FROM wp_posts
-		WHERE post_title LIKE \'%' . $search . '%\'';
+		WHERE post_title LIKE \'%' . $search . '%\' AND `post_status` != \'inherit\'';
 
 		$suggestions = array();
 
