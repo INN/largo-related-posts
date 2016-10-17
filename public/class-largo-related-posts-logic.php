@@ -172,14 +172,19 @@ class Largo_Related {
 				$args = array(
 					'post_type' => 'post',
 					'posts_per_page' => $this->number,
-					'taxonomy' => $term->taxonomy,
-					'term' => $term->slug,
 					'orderby' => 'date',
 					'order' => 'ASC',
 					'ignore_sticky_posts' => 1,
 					'date_query' => array(
 						'after' => $this->post->post_date,
 					),
+					'tax_query' => array(
+						array(
+							'taxonomy' => $term->taxonomy,
+							'terms' => $term->slug,
+							'field' => 'slug',
+						)
+					)
 				);
 
 				// run the query
@@ -207,7 +212,7 @@ class Largo_Related {
 						break;
 					}
 				}
-			}
+			} // foreach
 		}
 	}
 
