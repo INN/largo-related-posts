@@ -168,9 +168,12 @@ class Largo_Related_Posts_Admin {
 	public function related_posts_ajax_search() {
 		global $wpdb;
 		$search = like_escape($_REQUEST['term']);
+		$post_types = apply_filters( 'largo_related_posts_types', array( 'post' ) );
 
 		$query = 'SELECT post_title, ID FROM wp_posts
-		WHERE post_title LIKE \'%' . $search . '%\' AND `post_status` != \'inherit\'';
+		WHERE post_title LIKE \'%' . $search . '%\'
+		AND `post_status` != \'inherit\'
+		AND `post_type` IN ("' . implode( '", "', $post_types ) . '")';
 
 		$suggestions = array();
 
@@ -197,7 +200,7 @@ class Largo_Related_Posts_Admin {
 		if ( !isset( $_POST['largo_related_posts_nonce'] ) || !wp_verify_nonce( $_POST['largo_related_posts_nonce'], basename( __FILE__ ) ) ){
 			return;
 		}
-update_post_meta( $_POST['post_id'], 'test', $_POST );
+
 		$data = array();
 		foreach ( $_POST['data'] as $item ) {
 
