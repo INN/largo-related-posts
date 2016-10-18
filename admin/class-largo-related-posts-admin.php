@@ -172,7 +172,7 @@ class Largo_Related_Posts_Admin {
 
 		$query = 'SELECT post_title, ID FROM wp_posts
 		WHERE post_title LIKE \'%' . $search . '%\'
-		AND `post_status` != \'inherit\'
+		AND `post_status` LIKE \'publish\'
 		AND `post_type` IN ("' . implode( '", "', $post_types ) . '")';
 
 		$suggestions = array();
