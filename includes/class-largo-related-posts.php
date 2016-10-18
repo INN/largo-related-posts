@@ -116,7 +116,7 @@ class Largo_Related_Posts {
 		/**
 		 * The class responsible for working with bylines.
 		 */
-		if ( 'Largo' != wp_get_theme()->stylesheet ) {
+		if ( 'largo' != strtolower( wp_get_theme()->template ) ) {
 			require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/byline_class.php';
 		}
 
