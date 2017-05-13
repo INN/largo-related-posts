@@ -7,7 +7,11 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
-
 #related-posts-saved li a {
 	cursor: pointer;
+}
+#related-posts-saved li a.edit-post-link,
+#related-posts-saved li a.remove-related {
+  text-decoration: none;
+  color: #a00;
 }

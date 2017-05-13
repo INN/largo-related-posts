@@ -278,24 +278,27 @@ class Largo_Related_Posts_Admin {
 	 */
 	public function largo_related_posts_meta_box_display( $post ) {
 
-		// make sure the form request comes from WordPress
+		// Make sure the form request comes from WordPress.
 		wp_nonce_field( basename( __FILE__ ), 'largo_related_posts_nonce' );
 
 		$value = get_post_meta( $post->ID, 'largo_custom_related_posts', true );
-
-		echo '<p><strong>' . __('Related Posts', 'largo') . '</strong><br />';
-		echo __('To override the default related posts functionality,  enter post titles to manually select below.') . '</p>';
+		echo esc_html__( 'Start typing to search by post title.', 'mj' ) . '</p>';
 		echo '<input type="text" id="se_search_element_id" name="se_search_element_id" value="" />';
 
 		echo '<div id="related-posts-saved">';
 			echo '<ul>';
-				$manual_related_posts = get_post_meta( $post->ID, 'manual_related_posts', true );
-
-				if ( $manual_related_posts ) {
-					foreach ( $manual_related_posts as $key => $title ) {
-						echo '<li data-id="' . $key . '" data-title="' . $title . '">' . $title . ' | <a class="remove-related">Remove</a></li>';
-					}
+			$related_posts = get_post_meta( $post->ID, 'manual_related_posts', true );
+			if ( $related_posts ) {
+				foreach ( $related_posts as $related_post ) {
+					$title = get_the_title( $related_post );
+					$link = get_permalink( $related_post );
+					$edit_link = get_edit_post_link( $related_post );
+					echo '<li data-id="' . esc_attr( $related_post ) . '" data-title="' . esc_html( $title ) . '">
+						<a href="' . esc_url( $link ) . '">' . esc_html( $title ) . '</a><br/>
+						<a class="edit-post-link" href="' . esc_url( $edit_link ) . '">Edit Post</a> |
+						<a class="remove-related">Remove</a></li>';
 				}
+			}
 			echo '</ul>';
 		echo '</div>';
 
