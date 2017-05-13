@@ -121,7 +121,23 @@ class Largo_Related_Posts_Admin {
 						$("input#se_search_element_id").val('');
 
 						// Add the selected search term to the list below
-						$("#related-posts-saved ul").append("<li data-id='" + ui.item.value + "' data-title='" + ui.item.label + "'>" + ui.item.label + " | <a class='remove-related'>Remove</a></li>");
+						var link = $( '<a />');
+						link.attr( 'href', ui.item.permalink );
+						link.text( ui.item.label );
+
+						var edit_link = $( '<a />');
+						edit_link.attr( 'href', ui.item.edit_link );
+						edit_link.attr( 'class', 'edit-post-link' );
+						edit_link.text( 'Edit Post' );
+
+						var li = $( '<li />' );
+						li.attr( 'data-id', ui.item.value );
+						li.attr( 'data-title', ui.item.label );
+						li.append( link );
+						li.append( '<br/>' );
+						li.append( edit_link );
+						li.append( ' | <a class="remove-related">Remove</a>' );
+						$("#related-posts-saved ul").append( li );
 
 						// Select all items in the list
 						var optionTexts = [];
