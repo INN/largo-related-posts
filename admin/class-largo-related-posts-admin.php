@@ -97,8 +97,8 @@ class Largo_Related_Posts_Admin {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/largo-related-posts-admin.js', array( 'jquery' ), $this->version, false );
-		wp_enqueue_script('jquery-ui-autocomplete', '', array('jquery-ui-widget', 'jquery-ui-position'), '1.8.6');
-
+		wp_enqueue_script( 'jquery-ui-autocomplete', '', array( 'jquery-ui-widget', 'jquery-ui-position' ), '1.8.6' );
+		wp_localize_script( 'jquery-ui-autocomplete', 'ajax_object', array( 'largo_related_posts_ajax_nonce' => wp_create_nonce( 'largo_related_posts_ajax_nonce' ) ) );
 	}
 
 	/**
@@ -109,12 +109,12 @@ class Largo_Related_Posts_Admin {
 	public function related_posts_ajax_js() {
 		?>
 		<script type="text/javascript">
-			var se_ajax_url = '<?php echo admin_url('admin-ajax.php'); ?>';
+			var se_ajax_url = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
 
 			jQuery(document).ready(function($) {
 
 				$('input#se_search_element_id').autocomplete({
-					source: se_ajax_url + '?action=related_posts_ajax_search',
+					source: se_ajax_url + '?action=related_posts_ajax_search&security='+ajax_object.largo_related_posts_ajax_nonce,
 					select: function (event, ui) {
 
 						// Reset the search value
