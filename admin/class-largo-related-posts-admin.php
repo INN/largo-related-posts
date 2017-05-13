@@ -181,7 +181,7 @@ class Largo_Related_Posts_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	 public function related_posts_ajax_search() {
+	public function related_posts_ajax_search() {
 		global $wpdb;
 		check_ajax_referer( 'largo_related_posts_ajax_nonce', 'security' );
 		$search = '%' . $wpdb->esc_like( $_REQUEST['term'] ) . '%';
