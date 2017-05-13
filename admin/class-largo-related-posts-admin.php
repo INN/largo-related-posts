@@ -239,17 +239,17 @@ class Largo_Related_Posts_Admin {
 		$data = array();
 		foreach ( $_POST['data'] as $item ) {
 
+			$clean_post_id = sanitize_text_field( $item[0] );
 			// Skip over removed item, if set
-			if ( isset( $_POST['remove'] ) && $item[0] == $_POST['remove'] ) {
+			if ( isset( $_POST['remove'] ) && $clean_post_id == $_POST['remove'] ) {
 				continue;
 			} else {
-				// post_id as key, post title as value
-				$data[$item[0]] = esc_html( $item[1] );
+				$data[] = $clean_post_id;
 			}
 
 		}
 
-		update_post_meta( $_POST['post_id'], 'manual_related_posts', $data );
+		update_post_meta( sanitize_key( $_POST['post_id'] ), 'manual_related_posts', $data );
 		die();
 	}
 
