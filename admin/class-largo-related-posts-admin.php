@@ -281,7 +281,6 @@ class Largo_Related_Posts_Admin {
 		// Make sure the form request comes from WordPress.
 		wp_nonce_field( basename( __FILE__ ), 'largo_related_posts_nonce' );
 
-		$value = get_post_meta( $post->ID, 'largo_custom_related_posts', true );
 		echo esc_html__( 'Start typing to search by post title.', 'mj' ) . '</p>';
 		echo '<input type="text" id="se_search_element_id" name="se_search_element_id" value="" />';
 
