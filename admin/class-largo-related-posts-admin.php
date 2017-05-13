@@ -181,34 +181,42 @@ class Largo_Related_Posts_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function related_posts_ajax_search() {
+	 public function related_posts_ajax_search() {
 		global $wpdb;
-		$search = like_escape( $_REQUEST['term'] );
-		$post_types = apply_filters( 'largo_related_posts_types', array( 'post' ) );
+		check_ajax_referer( 'largo_related_posts_ajax_nonce', 'security' );
+		$search = '%' . $wpdb->esc_like( $_REQUEST['term'] ) . '%';
 
-		$query =
-		'
-		SELECT post_title, ID
-		FROM wp_posts
-		WHERE post_title LIKE \'%' . $search . '%\'
-			AND `post_status` LIKE \'publish\'
-			AND `post_type` IN ("' . implode( '", "', $post_types ) . '")
-		ORDER BY ID DESC
-		LIMIT 100
-		';
+		$sql = $wpdb->prepare(
+			"
+			SELECT post_title, ID
+			FROM wp_posts
+			WHERE post_title LIKE '%s'
+				AND post_status IN ('publish', 'draft', 'future')
+				AND post_type IN ('post')
+			ORDER BY ID DESC
+			LIMIT 50
+			",
+			$search
+		);
+
+		$result = wp_cache_get( 'largo_related_posts_query' );
+		if ( false === $result ) {
+			$result = $wpdb->get_results( $sql );
+			wp_cache_set( 'largo_related_posts_query', $result );
+		}
 
 		$suggestions = array();
 
-		foreach ( $wpdb->get_results( $query ) as $row ) {
+		foreach ( $result as $row ) {
 			$suggestion['value'] = $row->ID;
 			$suggestion['label'] = $row->post_title;
-
+			$suggestion['permalink'] = get_permalink( $row->ID );
+			$suggestion['edit_link'] = get_edit_post_link( $row->ID );
 			$suggestions[] = $suggestion;
 		}
 
-		$response = wp_json_encode( $suggestions );
-		echo $response;
-		die();
+		wp_send_json( $suggestions );
+
 	}
 
 	/**
