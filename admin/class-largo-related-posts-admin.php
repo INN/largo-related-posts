@@ -226,8 +226,13 @@ class Largo_Related_Posts_Admin {
 	 */
 	public function related_posts_ajax_save() {
 
-		// Verify form submission is coming from WordPress using a nonce
-		if ( !isset( $_POST['largo_related_posts_nonce'] ) || !wp_verify_nonce( $_POST['largo_related_posts_nonce'], basename( __FILE__ ) ) ){
+		// Verify form submission is coming from WordPress using a nonce.
+		if ( ! isset( $_POST['largo_related_posts_nonce'] ) || ! wp_verify_nonce( $_POST['largo_related_posts_nonce'], basename( __FILE__ ) ) ) {
+			return;
+		}
+
+		// Check if the current user has permission to edit the post.
+		if ( ! current_user_can( 'edit_post', $_POST['post_id'] ) ) {
 			return;
 		}
 
