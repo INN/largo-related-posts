@@ -199,10 +199,10 @@ class Largo_Related_Posts_Admin {
 			$search
 		);
 
-		$result = wp_cache_get( 'largo_related_posts_query' );
+		$result = wp_cache_get( sanitize_key( $_REQUEST[ 'term' ] ), 'largo_related_posts_query' );
 		if ( false === $result ) {
 			$result = $wpdb->get_results( $sql );
-			wp_cache_set( 'largo_related_posts_query', $result );
+			wp_cache_set( sanitize_key( $_REQUEST[ 'term' ] ), $result, 'largo_related_posts_query', DAY_IN_SECONDS );
 		}
 
 		$suggestions = array();
